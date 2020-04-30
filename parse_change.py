@@ -29,6 +29,9 @@ def read_lines(fname):
             elif re.search('^\+\+\+', line):
                 result = re.sub('^\+\+\+ \@\t', '', line)
                 stripped += result +"\n"
+            elif re.search('^\+', line):
+                result = re.sub('^\+','', line)
+                stripped += result +"\n"
             else:
                 stripped += line
                        
@@ -36,7 +39,7 @@ def read_lines(fname):
 
 
 if __name__ == "__main__":
-#    parse_opml(sys.argv[1])
+# opml parsing
     parsed_lines = read_lines(sys.argv[1])
     print(parsed_lines)
     
