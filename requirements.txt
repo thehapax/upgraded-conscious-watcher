@@ -1,4 +1,0 @@
-bs4
-telethon
-pyyaml
-#python-telegram-bot
