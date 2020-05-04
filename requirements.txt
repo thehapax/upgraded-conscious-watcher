@@ -1,0 +1,11 @@
+pandas==0.24.2
+lxml==4.2.5
+aiohttp==3.0.1
+requests==2.22.0
+Pillow==7.1.2
+beautifulsoup4==4.9.0
+plugins==0.5a1dev
+pymongo==3.10.1
+telethon==1.13.0
+typing==3.7.4.1
+PyYAML==5.3.1
