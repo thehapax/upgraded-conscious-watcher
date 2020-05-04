@@ -1,3 +1,5 @@
+import csv
+
 states = {
         'AK': 'Alaska',
         'AL': 'Alabama',
@@ -57,3 +59,23 @@ states = {
         'WV': 'West Virginia',
         'WY': 'Wyoming'
 }
+
+
+def is_state_value(state_value):
+    with open ('states.csv') as csv_file:
+        state_abbv = csv.reader(csv_file, delimiter=',')
+        for key,value in state_abbv:
+            if key.lower() == state_value:
+                print(key + ":" + value)
+                return True
+    return False
+
+
+if __name__ == "__main__":
+    print(states['WA'])
+    state_value = "california"
+
+    result = is_state_value(state_value)
+    if result:
+        print("State value is Matched")
+    

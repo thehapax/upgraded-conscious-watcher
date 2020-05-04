@@ -40,45 +40,63 @@ async def new_handler(event):
                         buttons=Button.inline('Click me', b'clickme'))
     else:
         await client.send_message(event.sender_id, 'Welcome to PowerOutage.US watcher bot')
-  
+         
+
 #@client.on(events.NewMessage)
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
     print(event.raw_text)
-    if '/alerts' in event.raw_text:
+    if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
             Button.text('Top 5 Outages', resize=True, single_use=True),
             Button.text('Regional Outages', resize=True, single_use=True),
-            Button.text('>100k Outages (Red Alert)', resize=True, single_use=True)
+            Button.text('State', resize=True, single_use=True),
         ])
     elif 'Top 5 Outages' in event.raw_text:
-        #msg = "<b>html header</b>"
         msg = get_top5data()
-        print(msg.text)
-        await client.send_message(event.sender_id, msg.text)
+        print(msg)
+        await client.send_message(event.sender_id, msg)
     elif 'Regional Outages' in event.raw_text:
         msg = get_region_data()
-        print(msg.text)
-        await client.send_message(event.sender_id, msg.text)
+        print(msg)
+        await client.send_message(event.sender_id, msg)
+    elif 'California' in event.raw_text:
+        msg = get_state_data("california")
+        print(msg)
+        await client.send_message(event.sender_id, msg)
+        
+@events.register(events.NewMessage(incoming=True, outgoing=False))
+async def alerthandler(event):
+    print(event.raw_text)
+    if '/alerts' in event.raw_text:
+        await event.reply('Auto Notify me for the following:')
+        Button.text('>100k Outages (Red Alert)', resize=True, single_use=True)
     elif '>100k Outages (Red Alert)' in event.raw_text:
-        msg = "<b>placeholder text</b>"        
+        msg = "<b>placeholder text</b>\n <a href=https://lbry.tv>lbry.tv</a>"
+        msg += "<u>watch here</u> <ul><li> #item one <li> item two </ul>"
+        msg += "<code> this is code </code> \n <pre>testing the pre tag </pre>"        
         await client.send_message(event.sender_id, msg)
                 
 
 @client.on(events.InlineQuery)
 #@events.register(events.InlineQuery)
 async def inlinehandler(event):
-    builder = event.builder
-    # Two options (convert user text to UPPERCASE or lowercase)
-    await event.answer([
-        builder.article('UPPERCASE', text=event.text.upper()),
-        builder.article('lowercase', text=event.text.lower()),
-    ])
+    try:
+        builder = event.builder
+        # Two options (convert user text to UPPERCASE or lowercase)
+        await event.answer([
+            builder.article('UPPERCASE', text=event.text.upper()),
+            builder.article('lowercase', text=event.text.lower()),
+        ])
+    except Exception as e: 
+        logger.error(e)
+
 
 client.start(bot_token=TOKEN)
 
 with client:
     client.add_event_handler(handler)
+    client.add_event_handler(alerthandler)
     print('(Press Ctrl+C to stop this)')
     client.run_until_disconnected()
 
@@ -87,7 +105,6 @@ with client:
 
 """
 Power levels
-
 10k - 50k Outages  (Yellow Alert)
 50k - 100k Outages (Orange Alert)
 >100k Outages (Red Alert)
