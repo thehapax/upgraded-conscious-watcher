@@ -25,10 +25,8 @@ def get_top5data():
     top_table_data = topfive_page.find_all("tr")
 
     topfive = site_link
-    
     for i in top_table_data:
         for item in i.find_all("td"):
-            
             topfive += str(item.text) + "\t"
         topfive += "\n"
 
@@ -51,10 +49,8 @@ def get_region_data():
 def get_state_data(state):
     state_url = state_base + state
     #print(state_url)
-    
     html_content = requests.get(state_url).text
     soup = BeautifulSoup(html_content, "lxml")
-
     state_link = "<a href=\"" +  state_url + "\">" + soup.title.text + "</a>\n"
     
     state_data = soup.find("div", attrs={"class" : "row col-md-12"})

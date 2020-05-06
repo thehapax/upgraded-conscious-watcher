@@ -2,6 +2,7 @@ from telethon import TelegramClient, events, Button
 import yaml
 import logging
 from power_data import get_state_data, get_top5data, get_region_data
+from us_states import is_state_value, two_letter_state, states
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
@@ -26,72 +27,75 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
+#####
 @client.on(events.CallbackQuery(data=b'clickme'))
 async def callback(event):
     print(event.data)
     await event.edit('Thank you for clicking {}!'.format(event.data))
 
-@client.on(events.NewMessage(pattern='(?i)/start', forwards=False))
-#@client.on(events.NewMessage(incoming=True))
+@client.on(events.NewMessage(incoming=True, outgoing=False))    
 async def new_handler(event):
     if 'hello' in event.raw_text:
         # await event.reply('respond - hi!')
         await client.send_message(event.sender_id, 'A single button, with "clickme" as data',
                         buttons=Button.inline('Click me', b'clickme'))
-    else:
-        await client.send_message(event.sender_id, 'Welcome to PowerOutage.US watcher bot')
-         
+#####
 
-#@client.on(events.NewMessage)
+
+@client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
+async def new_handler(event):
+    await client.send_message(event.sender_id, 'Welcome to PowerOutage.US watcher bot\n\n/outages - outages by region\n/state california - get state data \n/alerts - setup alerts ')
+
+
+@client.on(events.NewMessage(pattern='(?i)/state', incoming=True, outgoing=False))
+async def state_handler(event):
+    try:
+        print(f'state handler')
+        input = str(event.raw_text).lower().split(" ")
+        print(input[1])
+        if len(input[1]) == 2:
+            state_name = two_letter_state(input[1])
+            msg = get_state_data(state_name)
+            await client.send_message(event.sender_id, msg)
+                  
+        elif len(input[1]) > 0:
+            result = is_state_value(input[1])
+            if result:
+                msg = get_state_data(input[1])
+                print(msg)
+                await client.send_message(event.sender_id, msg)
+            else:
+                await client.send_message(event.sender_id, 'Not a State or not found. Please give a valid state.')
+    except Exception as e:
+            await client.send_message(event.sender_id, 'Not a State or not found. Please give a valid state.')
+        
+        
+
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
+    print("outages:")
     print(event.raw_text)
     if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
             Button.text('Top 5 Outages', resize=True, single_use=True),
             Button.text('Regional Outages', resize=True, single_use=True),
-            Button.text('State', resize=True, single_use=True),
         ])
     elif 'Top 5 Outages' in event.raw_text:
         msg = get_top5data()
-        print(msg)
         await client.send_message(event.sender_id, msg)
     elif 'Regional Outages' in event.raw_text:
         msg = get_region_data()
-        print(msg)
-        await client.send_message(event.sender_id, msg)
-    elif 'California' in event.raw_text:
-        msg = get_state_data("california")
-        print(msg)
         await client.send_message(event.sender_id, msg)
         
+                
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def alerthandler(event):
+    print("alert handler")
     print(event.raw_text)
     if '/alerts' in event.raw_text:
         await event.reply('Auto Notify me for the following:')
-        Button.text('>100k Outages (Red Alert)', resize=True, single_use=True)
-    elif '>100k Outages (Red Alert)' in event.raw_text:
-        msg = "<b>placeholder text</b>\n <a href=https://lbry.tv>lbry.tv</a>"
-        msg += "<u>watch here</u> <ul><li> #item one <li> item two </ul>"
-        msg += "<code> this is code </code> \n <pre>testing the pre tag </pre>"        
-        await client.send_message(event.sender_id, msg)
+
                 
-
-@client.on(events.InlineQuery)
-#@events.register(events.InlineQuery)
-async def inlinehandler(event):
-    try:
-        builder = event.builder
-        # Two options (convert user text to UPPERCASE or lowercase)
-        await event.answer([
-            builder.article('UPPERCASE', text=event.text.upper()),
-            builder.article('lowercase', text=event.text.lower()),
-        ])
-    except Exception as e: 
-        logger.error(e)
-
-
 client.start(bot_token=TOKEN)
 
 with client:
@@ -100,8 +104,6 @@ with client:
     print('(Press Ctrl+C to stop this)')
     client.run_until_disconnected()
 
-# @client.on(events.NewMessage(chats=inbounds))
-#   Button.request_location('Send location', resize=True, single_use=True)
 
 """
 Power levels

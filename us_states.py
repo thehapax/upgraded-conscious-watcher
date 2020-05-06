@@ -66,16 +66,30 @@ def is_state_value(state_value):
         state_abbv = csv.reader(csv_file, delimiter=',')
         for key,value in state_abbv:
             if key.lower() == state_value:
-                print(key + ":" + value)
+#                print(key + ":" + value)
                 return True
     return False
 
 
-if __name__ == "__main__":
-    print(states['WA'])
-    state_value = "california"
+def two_letter_state(state_value):
+    try:
+        st = str(state_value).upper()
+        print(f'state to Upper {st}')
+        if states[st]:
+            print("state is hit")
+            return states[st]
+    except Exception as e:
+        return False
 
+
+if __name__ == "__main__":
+    state_value = 'ca'
     result = is_state_value(state_value)
     if result:
-        print("State value is Matched")
+        print(f"{state_value} : State value is Matched")
+    
+    state_value = "california"
+    result = is_state_value(state_value)
+    if result:
+        print(f"{state_value} : State value is Matched")
     
