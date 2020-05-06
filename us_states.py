@@ -70,8 +70,16 @@ def is_state_value(state_value):
                 return True
     return False
 
+# reformat state names with two words for url ok format. 
+def reformat_2W_states(name):
+    if " " in name:
+        newname = name.replace(" ", "%20")
+        return newname
+    else:
+        return name
 
-def two_letter_state(state_value):
+
+def two_letter_statecode(state_value):
     try:
         st = str(state_value).upper()
         print(f'state to Upper {st}')
@@ -93,3 +101,6 @@ if __name__ == "__main__":
     if result:
         print(f"{state_value} : State value is Matched")
     
+    state_value = "New Hampshire"
+    name = reformat_2W_states(state_value)
+    print(name)

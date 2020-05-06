@@ -8,6 +8,7 @@ import re
 main_url = "https://poweroutage.us/"
 state_base = main_url + "area/state/"
 regions_url = main_url +  "area/regions"
+county_base = main_url + "area/county/"
 #print(soup.prettify()) # print the parsed data of html
 
 site_link = "<a href=\"https://poweroutage.us\"> PowerOutage.US </a>" + "\n"
@@ -27,7 +28,7 @@ def get_top5data():
     topfive = site_link
     for i in top_table_data:
         for item in i.find_all("td"):
-            topfive += str(item.text) + "\t"
+            topfive += "<b>" + str(item.text) + "</b>\t"
         topfive += "\n"
 
     return topfive
@@ -60,12 +61,31 @@ def get_state_data(state):
     for i in rows:
         data += str(i).replace("  ", "")
     clean_rows = cleanhtml(data)
-
     return state_link + clean_rows
 
 
+def get_county_data(county):
+    try:
+        county_url = county_base + county
+        print(county_url + "\n")
+        html_content = requests.get(county_url).text
+        soup = BeautifulSoup(html_content, "lxml")
+        county_link = "<a href=\"" +  county_url + "\">" + soup.title.text + "</a>\n"
+        county_data = soup.find_all("div", attrs={"class": "col-xs-12 col-sm-4"})
+        data = ""
+        r = ""
+        for row in county_data:
+            r = cleanhtml(str(row).replace("  ","")).replace("\n", " ")
+            data = data + r + "\n"
+           # print(r)
+            
+        return county_link + data
+    except Exception as e:
+        return "No data, or invalid county number"
+        
     
 if __name__ == "__main__":
+    """
     top5 = get_top5data()
     print(top5)
     print("====")
@@ -73,9 +93,15 @@ if __name__ == "__main__":
     region = get_region_data()
     print(region)
     print("====")
-
+    """
     print("\nSTATE LEVEL DATA\n")
     state = get_state_data("california")
     print(state)
     print("====")
-
+    
+    """
+    print("\nSan Francisco County: 2939\n")
+    county = get_county_data("2939")
+    print(county)
+    print("=====")
+    """
