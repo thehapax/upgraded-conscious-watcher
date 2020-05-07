@@ -1,9 +1,9 @@
 from telethon import TelegramClient, events, Button
-from power_data import get_state_data, get_top5data, get_region_data, get_county_data
-from us_states import is_state_value, two_letter_statecode, reformat_2W_states, states
+from power_data import get_state_data, get_top5data, get_region_data, get_region_state_data, get_county_data
+from us_states import is_state_value, two_letter_statecode, reformat_2W_states, states, state_list
+from us_states import regions, south, pacific, get_state_buttons, get_buttons, split
 import yaml
 import logging
-
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
@@ -28,29 +28,40 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
-####
-@client.on(events.CallbackQuery(data=b'clickme'))
+@client.on(events.CallbackQuery())
 async def callback(event):
-    print(event.data)
-    await event.edit('Thank you for clicking {}!'.format(event.data))
+    query_name = event.data.decode()
+#    print(f"callback: " + query_name)
+    await event.edit('Thank you for clicking {}!'.format(query_name))
+    msg = ""
+    # print(state_list)
+    if query_name in regions:
+        msg = get_region_state_data(query_name)
+        await client.send_message(event.sender_id, msg)
+        state_buttons = get_state_buttons(query_name)
+        note =  "\nGet more data below:\n"
+        await client.send_message(event.sender_id, note, buttons=state_buttons)
+    elif query_name in state_list:
+#        print(f"getting state data {query_name.lower()}")
+        msg = get_state_data(reformat_2W_states(query_name))
+        await client.send_message(event.sender_id, msg)
 
+    
 @client.on(events.NewMessage(incoming=True, outgoing=True))    
 async def new_handler(event):
     if 'alerts' in event.raw_text:
-        await client.send_message(event.sender_id, 'A single button, with "clickme" as data',
-                        buttons=Button.inline('Get Data', b'clickme'))
-#####
+        await client.send_message(event.sender_id, 'Setup Alerts: Work in progress.....')
 
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
 async def new_handler(event):
-    await client.send_message(event.sender_id, 'Welcome to PowerOutage.US watcher bot\n\n/outages - outages by region\n/state california - get state data \n/alerts - setup alerts ')
+    await client.send_message(event.sender_id, 'Welcome to PowerOutage.US watcher bot\n\n/outages - outages by region,\n/alerts - setup alerts ')
 
 
 @client.on(events.NewMessage(incoming=True, outgoing=False))
 async def state_handler(event):
     try:
         input = str(event.raw_text)
-        print(f'state/county handler: {input}')
+#       print(f'state/county handler: {input}')
         if len(input) == 4:
             msg = get_county_data(input)
             await client.send_message(event.sender_id, msg)            
@@ -68,7 +79,7 @@ async def state_handler(event):
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
     input = str(event.raw_text)
-    print("outages handler: {input}")
+#    print("outages handler: {input}")
     if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
             Button.text('Top 5 Outages', resize=True, single_use=True),
@@ -81,12 +92,16 @@ async def handler(event):
         await client.send_message(event.sender_id, msg)
     elif 'Regional Outages' in event.raw_text:
         msg = get_region_data()
-        await client.send_message(event.sender_id, msg)
+        msg += "\n Get more data from below:\n"
+        region_buttons = get_buttons(regions)
+        rbuttons = split(region_buttons, 2)
+        await client.send_message(event.sender_id, msg, buttons=rbuttons)
     elif 'State' in event.raw_text:
         msg = "Enter State Name or 2 letter code: (E.g. California or CA)"
         await client.send_message(event.sender_id, msg)
     elif 'County' in event.raw_text:
-        msg = "Enter 4 letter county code. You can find on PowerOutage.US"
+        msg = "Enter 4 letter county code. You can find code in the link on PowerOutage.US\n"
+        msg = "e.g. 2939 for San Francisco -  https://poweroutage.us/area/county/2939\n"
         await client.send_message(event.sender_id, msg)
     
                 

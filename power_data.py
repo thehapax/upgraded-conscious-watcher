@@ -2,13 +2,14 @@ from bs4 import BeautifulSoup
 import requests
 import lxml
 import pandas as pd
-from us_states import states
+from us_states import states, reformat_2W_states
 import re
 
 main_url = "https://poweroutage.us/"
 state_base = main_url + "area/state/"
 regions_url = main_url +  "area/regions"
 county_base = main_url + "area/county/"
+region_state = main_url + "area/region/"
 #print(soup.prettify()) # print the parsed data of html
 
 site_link = "<a href=\"https://poweroutage.us\"> PowerOutage.US </a>" + "\n"
@@ -30,10 +31,22 @@ def get_top5data():
         for item in i.find_all("td"):
             topfive += "<b>" + str(item.text) + "</b>\t"
         topfive += "\n"
-
     return topfive
 
 
+def get_region_state_data(area):
+    url = region_state + reformat_2W_states(area.lower())
+    html_content = requests.get(url).text
+    soup = BeautifulSoup(html_content, "lxml")
+    region_data = soup.find("table")
+    all_region = "<b>" + area + " Outages:</b>"
+    for i in region_data:
+        for item in i.find_all("td"):
+           all_region += item.text + "\t"
+        all_region += "\n"
+    return all_region
+
+    
 def get_region_data():
     html_content = requests.get(regions_url).text
     soup = BeautifulSoup(html_content, "lxml")
@@ -78,7 +91,6 @@ def get_county_data(county):
             r = cleanhtml(str(row).replace("  ","")).replace("\n", " ")
             data = data + r + "\n"
            # print(r)
-            
         return county_link + data
     except Exception as e:
         return "No data, or invalid county number"
@@ -105,3 +117,8 @@ if __name__ == "__main__":
     print(county)
     print("=====")
     """
+
+    area = "Pacific"    
+    print(f"Testing area: {area}\n\n")
+    state_regions = get_region_state_data(area)
+    print(state_regions)

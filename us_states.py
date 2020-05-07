@@ -1,4 +1,20 @@
 import csv
+from telethon import Button
+
+state_list = {
+         'Alabama','Alaska','Arizona','Arkansas','California','Colorado',
+         'Connecticut','Delaware', 'District of Columbia','Florida','Georgia',
+         'Hawaii','Idaho', 'Illinois','Indiana','Iowa','Kansas','Kentucky',
+         'Louisiana', 'Maine' 'Maryland','Massachusetts','Michigan','Minnesota',
+         'Mississippi', 'Missouri','Montana','Nebraska','Nevada',
+         'New Hampshire','New Jersey','New Mexico','New York',
+         'North Carolina','North Dakota','Northern Mariana Islands', 'Ohio',    
+         'Oklahoma','Oregon','Pennsylvania', 'Puerto Rico', 'Rhode Island',
+         'South  Carolina','South Dakota','Tennessee','Texas','Utah',
+         'Vermont','Virginia','Washington','West Virginia',
+         'Wisconsin','Wyoming', 'Virgin Islands'
+    }
+
 
 states = {
         'AK': 'Alaska',
@@ -60,6 +76,61 @@ states = {
         'WY': 'Wyoming'
 }
 
+regions = ['South', 'Pacific', 'South East', 'Midwest', 
+           'Great Lakes', 'Mid-Atlantic', 'Mountain', 'New England']
+
+south = ['Tennessee', 'Texas', 'Louisiana', 'Oklahoma', 'Mississippi', 'Kentucky', 'Arkansas']
+pacific = ['California', 'Oregon', 'Washington', 'Hawaii', 'Alaska']
+south_east = ['Georgia', 'Florida', 'North Carolina', 'Alabama', 'South Carolina']
+midwest = ['Missouri', 'South Dakota','Kansas', 'Iowa', 'North Dakota', 'Nebraska']
+great_lakes = ['Michigan', 'Ohio', 'Indiana','Illinois', 'Wisconsin', 'Minnesota']
+mid_atlantic = ['Virgina', 'West Virginia', 'Pennsylvania', 'Maryland', 'New York',
+                 'New Jersey', 'Delaware', 'District of Colombia']
+mountain = ['Idaho', 'Colorado', 'Montana', 'Arizona', 'Nevada', 'Utah', 'Wyoming', 'New Mexico']
+new_england = ['Massachusetts', 'Maine', 'New Hampshire', 'Vermont', 'Connecticut', 'Rhode Island']
+
+
+def split(arr, size):
+     arrs = []
+     while len(arr) > size:
+         pice = arr[:size]
+         arrs.append(pice)
+         arr   = arr[size:]
+     arrs.append(arr)
+     return arrs
+
+def get_buttons(my_list):
+    buttons = []
+    for item in my_list:
+        buttons.append(Button.inline(item, item))
+    return buttons
+
+
+def get_state_buttons(query_name):
+    button_list = None
+    if query_name == 'South':
+        button_list = get_buttons(south)
+    elif query_name == 'Pacific':
+        button_list = get_buttons(pacific)
+    elif query_name == 'South East':
+        button_list = get_buttons(south_east)
+    elif query_name == 'Midwest':
+        button_list = get_buttons(midwest)
+    elif query_name == 'Great Lakes':
+        button_list = get_buttons(great_lakes)
+    elif query_name == 'Mid-Atlantic':
+        button_list = get_buttons(mid_atlantic)
+    elif query_name == 'Mountain':
+        button_list = get_buttons(mountain)
+    elif query_name == 'New England':
+        button_list = get_buttons(new_england)
+    
+    if button_list is not None:
+        all_buttons = split(button_list, 2)
+        return all_buttons
+    else:
+        return None
+
 
 def is_state_value(state_value):
     with open ('states.csv') as csv_file:
@@ -82,9 +153,9 @@ def reformat_2W_states(name):
 def two_letter_statecode(state_value):
     try:
         st = str(state_value).upper()
-        print(f'state to Upper {st}')
+        #print(f'state to Upper {st}')
         if states[st]:
-            print("state is hit")
+             #print("state is hit")
             return states[st]
     except Exception as e:
         return False
@@ -104,3 +175,7 @@ if __name__ == "__main__":
     state_value = "New Hampshire"
     name = reformat_2W_states(state_value)
     print(name)
+    
+    test = 'Tennessee'
+    if test in state_list:
+        print("Tennessee is in the state_list")
