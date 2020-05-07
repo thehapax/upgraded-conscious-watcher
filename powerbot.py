@@ -88,8 +88,12 @@ async def handler(event):
             Button.text('County', resize=True, single_use=True)
         ])
     elif 'Top 5 Outages' in event.raw_text:
-        msg = get_top5data()
+        msg, top5states = get_top5data()
         await client.send_message(event.sender_id, msg)
+        top5_buttons = get_buttons(top5states)
+        top5b = split(top5_buttons, 2)
+        await client.send_message(event.sender_id, msg, buttons=top5b)
+
     elif 'Regional Outages' in event.raw_text:
         msg = get_region_data()
         msg += "\n Get more data from below:\n"

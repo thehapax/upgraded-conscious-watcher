@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import lxml
 import pandas as pd
-from us_states import states, reformat_2W_states
+from us_states import states, reformat_2W_states, state_list
 import re
 
 main_url = "https://poweroutage.us/"
@@ -12,7 +12,7 @@ county_base = main_url + "area/county/"
 region_state = main_url + "area/region/"
 #print(soup.prettify()) # print the parsed data of html
 
-site_link = "<a href=\"https://poweroutage.us\"> PowerOutage.US </a>" + "\n"
+site_link = "<a href=\"https://poweroutage.us\"> PowerOutage.US </a>" + "\n\n"
 
 def cleanhtml(raw_html):
   cleanr = re.compile('<.*?>')
@@ -25,13 +25,19 @@ def get_top5data():
     soup = BeautifulSoup(html_content, "lxml")
     topfive_page = soup.find("table", attrs={"class" : "topfivetable table-striped"})
     top_table_data = topfive_page.find_all("tr")
-
+  
+    top_states = []  
     topfive = site_link
     for i in top_table_data:
         for item in i.find_all("td"):
-            topfive += "<b>" + str(item.text) + "</b>\t"
+            str_item = str(item.text)
+            if str_item in state_list:
+                topfive += "<b>" + str_item + "</b>\t"
+                top_states.append(str_item)
+            else:
+                topfive += str(item.text) + "\t"
         topfive += "\n"
-    return topfive
+    return topfive, top_states
 
 
 def get_region_state_data(area):
