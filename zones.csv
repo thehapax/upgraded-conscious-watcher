@@ -1,0 +1,38 @@
+,UTC Offset,Locations,Example Name,Example Location
+0,UTC +14,Christmas Island/Kiribati,LINT,Kiritimati
+1,UTC +13,Tonga and 3 more,TOT,Nukualofa
+2,UTC +12:45,Chatham Islands/New Zealand,CHAST,Chatham Islands
+3,UTC +12,New Zealand with exceptions and 9 more,ANAT,Anadyr
+4,UTC +11,small region of Russia and 6 more,SBT,Honiara
+5,UTC +10:30,Lord Howe Island/Australia,LHST,Lord Howe Island
+6,UTC +10,much of Australia and 6 more,AEST,Melbourne
+7,UTC +9:30,some regions of Australia,ACST,Adelaide
+8,UTC +9,"Japan, South Korea and 5 more",JST,Tokyo
+9,UTC +8:45,Western Australia/Australia,ACWST,Eucla
+10,UTC +8,"China, Philippines and 11 more",CST,Beijing
+11,UTC +7,"much of Indonesia, Thailand and 7 more",WIB,Jakarta
+12,UTC +6:30,Myanmar and Cocos Islands,MMT,Yangon
+13,UTC +6,Bangladesh and 6 more,BST,Dhaka
+14,UTC +5:45,Nepal,NPT,Kathmandu
+15,UTC +5:30,India and Sri Lanka,IST,New Delhi
+16,UTC +5,Pakistan and 8 more,UZT,Tashkent
+17,UTC +4:30,Iran and Afghanistan,IRDT,Tehran
+18,UTC +4,Azerbaijan and 8 more,GST,Dubai
+19,UTC +3,Greece and 37 more,MSK,Moscow
+20,UTC +2,Germany and 47 more,CEST,Brussels
+21,UTC +1,United Kingdom and 20 more,BST,London
+22,UTC +0,Iceland and 19 more,WET,Casablanca
+23,UTC -1,Cabo Verde,CVT,Praia
+24,UTC -2,most of Greenland and 3 more,WGST,Nuuk
+25,UTC -2:30,Newfoundland and Labrador/Canada,NDT,St. John's
+26,UTC -3,"most of Brazil, Argentina and 9 more",ART,Buenos Aires
+27,UTC -4,regions of USA and 33 more,EDT,New York
+28,UTC -5,regions of USA and 9 more,CDT,Mexico City
+29,UTC -6,small region of USA and 10 more,CST,Guatemala City
+30,UTC -7,regions of USA and 2 more,PDT,Los Angeles
+31,UTC -8,Alaska/USA and 2 more,AKDT,Anchorage
+32,UTC -9,Alaska/USA and regions of French Polynesia,HDT,Adak
+33,UTC -9:30,Marquesas Islands/French Polynesia,MART,Taiohae
+34,UTC -10,Hawaii/USA and 2 more,HST,Honolulu
+35,UTC -11,American Samoa and 2 more,NUT,Alofi
+36,UTC -12,much of US Minor Outlying Islands,AoE,Baker Island

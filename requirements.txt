@@ -9,3 +9,4 @@ pymongo==3.10.1
 telethon==1.13.0
 typing==3.7.4.1
 PyYAML==5.3.1
+timezonefinder==4.4.0
