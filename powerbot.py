@@ -4,10 +4,26 @@ from us_states import is_state_value, two_letter_statecode, reformat_2W_states, 
 from us_states import regions, south, pacific, get_state_buttons, get_buttons, split
 import yaml
 import logging
+from logging import handlers
+from timezone_list import get_zones, get_zone_buttons
+
+log_path = '/Users/octo/url-watcher-bot/logs/logfile'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
+########################################
+# Log to a rotating file - why isn't this working?
+level = logging.INFO
+logger.setLevel(level)
+# 5*5MB log files max:
+h = logging.handlers.RotatingFileHandler(log_path, encoding='utf-8', maxBytes=5 * 1024 * 1024, backupCount=5)
+# example of format: 2019-04-05 20:28:45,944  INFO: blah
+h.setFormatter(logging.Formatter("%(asctime)s\t%(levelname)s:%(message)s"))
+h.setLevel(level)
+logger.addHandler(h)
+########################################
 
 path  = "./"
 config_file = path + 'config_test.yml'
@@ -82,18 +98,18 @@ async def handler(event):
 #    print("outages handler: {input}")
     if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
-            Button.text('Top 5 Outages', resize=True, single_use=True),
-            Button.text('Regional Outages', resize=True, single_use=True),
-            Button.text('State', resize=True, single_use=True),
-            Button.text('County', resize=True, single_use=True)
+            [Button.text('Set Time Zone', resize=True, single_use=True),],
+            [Button.text('Top 5 Outages', resize=True, single_use=True),
+            Button.text('Regional Outages', resize=True, single_use=True),], 
+            [Button.text('State', resize=True, single_use=True),
+            Button.text('County', resize=True, single_use=True)]
         ])
     elif 'Top 5 Outages' in event.raw_text:
         msg, top5states = get_top5data()
-        await client.send_message(event.sender_id, msg)
         top5_buttons = get_buttons(top5states)
         top5b = split(top5_buttons, 2)
         await client.send_message(event.sender_id, msg, buttons=top5b)
-
+        logger.info("inside top 5 outages")
     elif 'Regional Outages' in event.raw_text:
         msg = get_region_data()
         msg += "\n Get more data from below:\n"
@@ -107,8 +123,19 @@ async def handler(event):
         msg = "Enter 4 letter county code. You can find code in the link on PowerOutage.US\n"
         msg = "e.g. 2939 for San Francisco -  https://poweroutage.us/area/county/2939\n"
         await client.send_message(event.sender_id, msg)
-    
-                
+    elif 'Set Time Zone' in event.raw_text:
+        try:
+            logger.info("Inside Set Time zone")
+            msg = "\nSelect your Time Zone: \n"
+            zonelist = get_zones()
+            logger.info(zonelist)
+            zones = get_zone_buttons(zonelist)
+
+            await client.send_message(event.sender_id, msg, buttons=zones)
+            
+        except Exception as e:
+            logger.info(e)
+            
 client.start(bot_token=TOKEN)
 
 with client:
