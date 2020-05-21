@@ -1,0 +1,3 @@
+alerts - set alerts by preference
+start - start bot 
+outages - get outage information by region 
