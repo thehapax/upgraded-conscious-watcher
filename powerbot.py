@@ -6,6 +6,7 @@ import yaml
 import logging
 from logging import handlers
 from timezone_list import get_zones, get_zone_buttons
+from timezone_list import get_common_buttons, get_commontz
 
 log_path = '/Users/octo/url-watcher-bot/logs/logfile'
 
@@ -127,10 +128,11 @@ async def handler(event):
         try:
             logger.info("Inside Set Time zone")
             msg = "\nSelect your Time Zone: \n"
-            zonelist = get_zones()
-            logger.info(zonelist)
-            zones = get_zone_buttons(zonelist)
-
+            df = get_commontz()
+            uszones = df[df['region'] == 'US']['name']
+            ul  = uszones.values.tolist()
+            zones = get_common_buttons(ul)
+ 
             await client.send_message(event.sender_id, msg, buttons=zones)
             
         except Exception as e:

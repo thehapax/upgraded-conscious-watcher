@@ -18,7 +18,7 @@ def pull_from_web(url):
     print(zone_table)
     zone_table.to_csv("zones.csv")
 
-
+#####################################
 def get_zones():
     zones = pd.read_csv("zones.csv", index_col=0)
     zone_display = zones[['UTC Offset', 'Example Location']] 
@@ -41,35 +41,54 @@ def get_zone_buttons(zones):
         buttons.append([Button.inline(desc, utc_offset)])
     return buttons
 
+##########################################
+
+def get_common_buttons(zones):
+    buttons = []
+    for zone in zones:
+        buttons.append([Button.inline(zone, zone)])
+    return buttons
+
 
 def get_commontz():
     zones = pd.DataFrame(columns=['region', 'name'])
     for tz in pytz.common_timezones:
-#        print(tz)
         if "/" in tz:
             dict1 = {}
             region = tz.split("/")
             dict1 = {'region': region[0], 'name': tz}
             zones = zones.append(dict1, ignore_index=True)
-#            print(dict1)
     return zones
+
+def get_localized_time(textzone):
+    # example for textzone : 'US/Pacific'
+    fmt = '%Y-%m-%d %H:%M:%S %Z%z'
+    tz = pytz.timezone(textzone)
+    ct = dt.datetime.now(tz=tz)
+    fct = ct.strftime(fmt)
+    print(f'timezone: {tz}')
+    print(f'fct: {fct}')
+    return fct
             
 
 if __name__ == "__main__":
-    fmt = '%Y-%m-%d %H:%M:%S %Z%z'
-    tz = pytz.timezone('US/Pacific')
-    ct = dt.datetime.now(tz=tz)
-    print(f'timezone: {tz}')
-    print(f'ct : {ct}')
-    fct = ct.strftime(fmt)
-    print(f'fct: {fct}')
+    pacific = 'US/Pacific'
+    pactime = get_localized_time(pacific)
 
-    pd = get_commontz()
-    uszones = pd[pd['region'] == 'US']
-    print(uszones['name'])
+    df = get_commontz()
+    # unique values in 'regions'
+    uniq = df.region.unique()    
+    print(uniq)
     
-    utc_time = dt.datetime.now(tz=pytz.utc)
-    print(utc_time)
+    # selected target region
+    target_region = 'US'
+    uszones = df[df['region'] == target_region]['name']
+    ul  = uszones.values.tolist()
+    print(ul)
+
+    
+    #utc_time = dt.datetime.now(tz=pytz.utc)
+    #print(utc_time)
     
     #pull_from_web(sortedbytime_url)
     #zonelist = get_zones()
