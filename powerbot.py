@@ -6,7 +6,7 @@ import yaml
 import logging
 from logging import handlers
 from timezone_list import get_zones, get_zone_buttons
-from timezone_list import get_common_buttons, get_commontz
+from timezone_list import get_common_buttons, get_commontz, get_localized_time
 
 log_path = '/Users/octo/url-watcher-bot/logs/logfile'
 
@@ -45,11 +45,21 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
+def get_regional_tz_buttons(region, df):
+    rzones = df[df['region'] == region]['name']
+    ul  = rzones.values.tolist()
+    buttons = get_common_buttons(ul)
+    return buttons
+
+
 @client.on(events.CallbackQuery())
 async def callback(event):
     query_name = event.data.decode()
 #    print(f"callback: " + query_name)
     await event.edit('Thank you for clicking {}!'.format(query_name))
+    df = get_commontz()
+    timezone_regions = df.region.unique()
+
     msg = ""
     # print(state_list)
     if query_name in regions:
@@ -59,10 +69,18 @@ async def callback(event):
         note =  "\nGet more data below:\n"
         await client.send_message(event.sender_id, note, buttons=state_buttons)
     elif query_name in state_list:
-#        print(f"getting state data {query_name.lower()}")
+    #   print(f"getting state data {query_name.lower()}")
         msg = get_state_data(reformat_2W_states(query_name))
         await client.send_message(event.sender_id, msg)
-
+    elif query_name in timezone_regions:
+        tzbuttons = get_regional_tz_buttons(query_name, df)        
+        await client.send_message(event.sender_id, "select a timezone", buttons=tzbuttons)
+    elif query_name in list(df['name']):
+        # fix the pacific option, which conflicts with state regions
+        loctime = get_localized_time(query_name)
+        msg = "Your localtime is: " + str(loctime)
+        await client.send_message(event.sender_id, msg)
+    
     
 @client.on(events.NewMessage(incoming=True, outgoing=True))    
 async def new_handler(event):
@@ -126,13 +144,11 @@ async def handler(event):
         await client.send_message(event.sender_id, msg)
     elif 'Set Time Zone' in event.raw_text:
         try:
-            logger.info("Inside Set Time zone")
-            msg = "\nSelect your Time Zone: \n"
+            logger.info("Inside Set Time zone, geo region")
+            msg = "\nSelect your Geo Region: \n"
             df = get_commontz()
-            uszones = df[df['region'] == 'US']['name']
-            ul  = uszones.values.tolist()
-            zones = get_common_buttons(ul)
- 
+            uniq = df.region.unique()  
+            zones = get_common_buttons(uniq)
             await client.send_message(event.sender_id, msg, buttons=zones)
             
         except Exception as e:
