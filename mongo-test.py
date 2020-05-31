@@ -21,16 +21,10 @@ class Post(Document):
     def live_alerts(self, queryset):
         return queryset.filter(active=True)
 
-# region example : state or county, e.g. California
-threshold = ['10k', '>50k','>100k'] # threshold for alert
-time_interval = ['24', '12', '6'] # check very 6,12, or 24 hrs
-username = 'testuser'
-user_id = '1234234324'
-######
 
 try:
     connect('mongoengine_test', host='localhost', port=27017)
-
+    
     alert1 = Post(username='joetest',
                     user_id='12345',
                     region='Pacific',
