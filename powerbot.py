@@ -87,9 +87,21 @@ async def new_handler(event):
     if 'alerts' in event.raw_text:
         await client.send_message(event.sender_id, 'Setup Alerts: Work in progress.....')
 
+@client.on(events.NewMessage(pattern='(?i)/contact', incoming=True, outgoing=True))    
+async def new_handler(event):
+    msg = 'Original Data is from poweroutage.us. '
+    msg = msg + 'Telegram bot development is completely independent and has no connection with site. \n\n'
+    msg = msg + 'Questions, bug reports? Contact us via @powerbotfeedback\n'
+    await client.send_message(event.sender_id, msg)
+
+
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
 async def new_handler(event):
-    await client.send_message(event.sender_id, 'Welcome to PowerOutage.US watcher bot\n\n/outages - outages by region,\n/alerts - setup alerts ')
+    msg = 'Welcome to PowerOutage.US watcher bot\n\n'
+    msg = msg + '/outages - outages by region,\n'
+    msg = msg + '/alerts - setup alerts\n'
+    msg = msg + "/contact - info about this bot\n"
+    await client.send_message(event.sender_id, msg)
 
 
 @client.on(events.NewMessage(incoming=True, outgoing=False))

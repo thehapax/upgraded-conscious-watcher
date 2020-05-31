@@ -1,3 +1,4 @@
 alerts - set alerts by preference
 start - start bot 
 outages - get outage information by region 
+contact - info about this bot
