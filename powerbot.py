@@ -81,25 +81,26 @@ async def callback(event):
         msg = "Your localtime is: " + str(loctime)
         await client.send_message(event.sender_id, msg)
     
-    
+"""   
 @client.on(events.NewMessage(incoming=True, outgoing=True))    
 async def new_handler(event):
     if 'alerts' in event.raw_text:
         await client.send_message(event.sender_id, 'Setup Alerts: Work in progress.....')
+"""
 
 @client.on(events.NewMessage(pattern='(?i)/contact', incoming=True, outgoing=True))    
 async def new_handler(event):
-    msg = 'Original Data is from poweroutage.us. '
-    msg = msg + 'Telegram bot development is completely independent and has no connection with site. \n\n'
-    msg = msg + 'Questions, bug reports? Contact us via @powerbotfeedback\n'
+    msg = 'Original Data is from poweroutage.us.'
+    msg = msg + 'Telegram bot development is independent, has no affliation to above site. \n\n'
+    msg = msg + 'Questions, bug reports? Contact us via @powerfeedback_bot\n'
     await client.send_message(event.sender_id, msg)
-
+    
 
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
 async def new_handler(event):
     msg = 'Welcome to PowerOutage.US watcher bot\n\n'
     msg = msg + '/outages - outages by region,\n'
-    msg = msg + '/alerts - setup alerts\n'
+    msg = msg + '/alerts - setup alerts  \n'
     msg = msg + "/contact - info about this bot\n"
     await client.send_message(event.sender_id, msg)
 
@@ -121,15 +122,53 @@ async def state_handler(event):
             await client.send_message(event.sender_id, msg)
     except Exception as e:
             await client.send_message(event.sender_id, 'Not a State or not found. Please give a valid state.')
-        
-        
+
+
+@client.on(events.CallbackQuery())
+async def callback(event):
+    query_name = event.data.decode()
+    print(f"callback: " + query_name)
+    await event.edit('Thank you for clicking {}!'.format(query_name))
+    msg = ""
+    """
+    if query_name in '/Set Alert':
+    """
+    
+
+@events.register(events.NewMessage(incoming=True, outgoing=False))
+async def alerthandler(event):
+    input = str(event.raw_text)
+#    print("outages handler: {input}")
+    if '/alerts' in event.raw_text:
+        print(input)
+        msg = 'okay setting alert to: ' + input
+        await client.send_message(event.sender_id, msg, buttons=[
+            [Button.text('Set Alert', resize=True, single_use=True),
+             Button.text('Stop Notifications', resize=True, single_use=True)],
+            [Button.text('Show Alerts', resize=True, single_use=True),
+             Button.text('/start', resize=True, single_use=True)]])
+    elif 'Set Alert' in event.raw_text:
+        msg = "example: /alerts 10k 24 California"
+        await client.send_message(event.sender_id, msg)
+    elif 'Stop Notifications' in event.raw_text:
+        msg = ""
+        await client.send_message(event.sender_id, msg)        
+    elif 'Show Alerts' in event.raw_text:
+        msg = "Here are the currently active alerts:"
+        await client.send_message(event.sender_id, msg)
+
+
+
+
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
     input = str(event.raw_text)
 #    print("outages handler: {input}")
+
     if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
-            [Button.text('Set Time Zone', resize=True, single_use=True),],
+            [Button.text('/alerts', resize=True, single_use=True), # show alerts, # stop alerts
+             Button.text('Set Time Zone', resize=True, single_use=True),],
             [Button.text('Top 5 Outages', resize=True, single_use=True),
             Button.text('Regional Outages', resize=True, single_use=True),], 
             [Button.text('State', resize=True, single_use=True),
@@ -170,12 +209,18 @@ client.start(bot_token=TOKEN)
 
 with client:
     client.add_event_handler(handler)
+    client.add_event_handler(alerthandler)
+
     print('(Press Ctrl+C to stop this)')
     client.run_until_disconnected()
 
 
 """
-Power levels
+time interval : 'every 24 hrs'
+
+alert zone : all regions, state, country
+
+Power levels thresholds
 10k - 50k Outages  (Yellow Alert)
 50k - 100k Outages (Orange Alert)
 >100k Outages (Red Alert)

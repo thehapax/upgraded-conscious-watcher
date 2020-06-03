@@ -29,35 +29,48 @@ db=client.admin
 
 # get count of posts by user id
 def get_count(userid, posts):   
-    num_alerts = posts.count_documents({'userid': userid})
-    print(num_alerts)
-    return num_alerts
+    try:
+        num_alerts = posts.count_documents({'userid': userid})
+        return num_alerts
+    except Exception as e:
+        logger.error(e)
             
 # delete a document
 def delete_doc(userid, posts):
-    result = posts.delete_one({'userid': userid})
-    return result
+    try:
+        result = posts.delete_one({'userid': userid})
+        return result
+    except Exception as e:
+        logger.error(e)
 
 # find a document based on criteria
 def find_doc(userid, posts):
-    get_post = posts.find_one({'userid': '12345'})
-    print(get_post)
-    return get_post
+    try:
+        get_post = posts.find_one({'userid': '12345'})
+        return get_post
+    except Exception as e:
+        logger.error(e)
 
 def drop_bulk_db(pattern2drop):
     # example: pattern2drop == 'intro-mongodb-testing"
-    dbnames = client.list_database_names()
-    for each in dbnames:
-        if pattern2drop in each:
-            print(each)
-            client.drop_database(each, session=None)
+    try:
+        dbnames = client.list_database_names()
+        for each in dbnames:
+            if pattern2drop in each:
+                logger.info(each)
+                client.drop_database(each, session=None)
+    except Exception as e:
+        logger.error(e)
 
 
 def add_doc(post_one, posts):
     # add a document
-    result = posts.insert_one(post_one)
-    print('One post: {0}'.format(result.inserted_id))
-    return result
+    try:
+        result = posts.insert_one(post_one)
+        logger.info('One post: {0}'.format(result.inserted_id))
+        return result
+    except Exception as e:
+        logger.error(e)
 
 
 post_one ={
@@ -69,13 +82,30 @@ post_one ={
     'active' : True,
 }
 
+def construct_post(userid, username, threshold, time_interval, region):
+    post ={
+    'userid': userid,
+    'username': username,
+    'time_interval': time_interval,
+    'threshold': threshold,
+    'region' : region,
+    'active' : True,
+    }
+
+    return post
+
+
 # name of db is pymongo_test
 db = client.pymongo_test
 # get all posts
 posts = db.posts
 
+result = add_doc(post_one, posts)
+print(result)
+
 # find posts sort by ID
 posts_by_id = posts.find().sort("_id", DESCENDING)
+print(posts_by_id)
 
 # find posts by time interval
 update = posts.find({'time_interval':'6'})
@@ -85,8 +115,7 @@ for i in update:
 
 # get count of posts
 num = get_count('joetest', posts)
-
-
+print(num)
 
 
 
