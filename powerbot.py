@@ -2,11 +2,15 @@ from telethon import TelegramClient, events, Button
 from power_data import get_state_data, get_top5data, get_region_data, get_region_state_data, get_county_data
 from us_states import is_state_value, two_letter_statecode, reformat_2W_states, states, state_list
 from us_states import regions, south, pacific, get_state_buttons, get_buttons, split
+from us_states import all_regions
 import yaml
 import logging
 from logging import handlers
 from timezone_list import get_zones, get_zone_buttons
 from timezone_list import get_common_buttons, get_commontz, get_localized_time
+
+import datetime as dt 
+from pymongo_tools import get_count, delete_doc, find_doc, add_doc, drop_bulk_db
 
 log_path = '/Users/octo/url-watcher-bot/logs/logfile'
 
@@ -81,12 +85,6 @@ async def callback(event):
         msg = "Your localtime is: " + str(loctime)
         await client.send_message(event.sender_id, msg)
     
-"""   
-@client.on(events.NewMessage(incoming=True, outgoing=True))    
-async def new_handler(event):
-    if 'alerts' in event.raw_text:
-        await client.send_message(event.sender_id, 'Setup Alerts: Work in progress.....')
-"""
 
 @client.on(events.NewMessage(pattern='(?i)/contact', incoming=True, outgoing=True))    
 async def new_handler(event):
@@ -124,16 +122,61 @@ async def state_handler(event):
             await client.send_message(event.sender_id, 'Not a State or not found. Please give a valid state.')
 
 
-@client.on(events.CallbackQuery())
-async def callback(event):
-    query_name = event.data.decode()
-    print(f"callback: " + query_name)
-    await event.edit('Thank you for clicking {}!'.format(query_name))
-    msg = ""
-    """
-    if query_name in '/Set Alert':
-    """
-    
+thresholds = ['10k', '50k', '100k']
+time_intervals = ['6', '12', '24']
+
+def parse_alert(inputstr, userid, username): 
+    iarr  = inputstr.split(' ')
+    print(iarr)
+    oktogo = True
+    # validate inputs
+    if iarr[1] not in thresholds:
+        logger.info("invalid threshold: "+ iarr[1])
+        oktogo = False
+    if iarr[2] not in time_intervals:
+        logger.info("invalid time interval: "+ iarr[2])
+        oktogo = False
+    if iarr[3] not in all_regions:
+        logger.info("invalid location: "+ iarr[3])
+        oktogo = False
+    if oktogo:
+        # add to mongodb
+        add_post ={
+            'userid':  userid,
+            'username': username,
+            'time_interval': iarr[1],
+            'threshold': iarr[2],
+            'region' : iarr[3],
+            'active' : True,
+            'initdate': dt.datetime.now()
+        }
+        print(add_post)
+        
+        result = add_doc(add_post)
+        print(result)
+
+    return oktogo
+        
+
+@client.on(events.NewMessage(incoming=True, outgoing=False))
+async def alert_handler(event):
+    try:
+        inputstr = event.raw_text
+        if '/setalert' in inputstr:
+            uname = await event.get_sender()
+            print("username " + str(uname.username))
+            print("sender id " + str(event.sender_id))
+            result = parse_alert(inputstr, event.sender_id, uname.username)
+            if result is True:
+                msg = 'Ok, settng alert for: ' + inputstr
+                await client.send_message(event.sender_id, msg)
+            elif result is False:
+                msg = 'Error setting alert, bad parameters'
+                await client.send_message(event.sender_id, msg)
+    except Exception as e:
+            logger.info(e)
+            await client.send_message(event.sender_id, 'Invalid Alert parameters.')
+
 
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def alerthandler(event):
@@ -141,23 +184,23 @@ async def alerthandler(event):
 #    print("outages handler: {input}")
     if '/alerts' in event.raw_text:
         print(input)
-        msg = 'okay setting alert to: ' + input
+        msg = 'Fetching.... ' + input
         await client.send_message(event.sender_id, msg, buttons=[
             [Button.text('Set Alert', resize=True, single_use=True),
              Button.text('Stop Notifications', resize=True, single_use=True)],
             [Button.text('Show Alerts', resize=True, single_use=True),
              Button.text('/start', resize=True, single_use=True)]])
     elif 'Set Alert' in event.raw_text:
-        msg = "example: /alerts 10k 24 California"
+        # set up alert
+        msg = "example: /setalert 10k 24 California"
         await client.send_message(event.sender_id, msg)
     elif 'Stop Notifications' in event.raw_text:
-        msg = ""
+        msg = "Stopping all notifications"
         await client.send_message(event.sender_id, msg)        
     elif 'Show Alerts' in event.raw_text:
-        msg = "Here are the currently active alerts:"
+        # get alert information from mongodb
+        msg = "Here are the currently active alerts:" 
         await client.send_message(event.sender_id, msg)
-
-
 
 
 @events.register(events.NewMessage(incoming=True, outgoing=False))
@@ -167,8 +210,8 @@ async def handler(event):
 
     if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
-            [Button.text('/alerts', resize=True, single_use=True), # show alerts, # stop alerts
-             Button.text('Set Time Zone', resize=True, single_use=True),],
+#            [Button.text('/alerts', resize=True, single_use=True), # show alerts, # stop alerts
+#             Button.text('Set Time Zone', resize=True, single_use=True),],
             [Button.text('Top 5 Outages', resize=True, single_use=True),
             Button.text('Regional Outages', resize=True, single_use=True),], 
             [Button.text('State', resize=True, single_use=True),
@@ -217,7 +260,6 @@ with client:
 
 """
 time interval : 'every 24 hrs'
-
 alert zone : all regions, state, country
 
 Power levels thresholds

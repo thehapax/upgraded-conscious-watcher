@@ -89,6 +89,10 @@ mid_atlantic = ['Virgina', 'West Virginia', 'Pennsylvania', 'Maryland', 'New Yor
 mountain = ['Idaho', 'Colorado', 'Montana', 'Arizona', 'Nevada', 'Utah', 'Wyoming', 'New Mexico']
 new_england = ['Massachusetts', 'Maine', 'New Hampshire', 'Vermont', 'Connecticut', 'Rhode Island']
 
+all_regions = regions + south + pacific + south_east + midwest + great_lakes
+all_regions = all_regions +  mid_atlantic + mountain + new_england 
+
+
 
 def split(arr, size):
      arrs = []
@@ -162,6 +166,10 @@ def two_letter_statecode(state_value):
 
 
 if __name__ == "__main__":
+    
+    print(all_regions)
+    print("==============")
+    
     state_value = 'ca'
     result = is_state_value(state_value)
     if result:

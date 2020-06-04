@@ -3,6 +3,7 @@ import datetime
 import logging
 from logging import handlers
 from us_states import regions, state_list
+import datetime as dt
 
 # https://github.com/mongodb/homebrew-brew
 # $ brew services start mongodb-community
@@ -22,13 +23,17 @@ user_id = '1234234324'
 mongo_url = 'mongodb://localhost:27017'
 client = MongoClient('localhost', port=27017)
 db=client.admin
+# name of db is pymongo_test
+db = client.powerwatcher
+# get all posts
+posts = db.posts
 
 # Issue the serverStatus command and print the results
 #serverStatusResult=db.command("serverStatus")
 #print(serverStatusResult)
 
 # get count of posts by user id
-def get_count(userid, posts):   
+def get_count(userid):   
     try:
         num_alerts = posts.count_documents({'userid': userid})
         return num_alerts
@@ -36,7 +41,7 @@ def get_count(userid, posts):
         logger.error(e)
             
 # delete a document
-def delete_doc(userid, posts):
+def delete_doc(userid):
     try:
         result = posts.delete_one({'userid': userid})
         return result
@@ -44,7 +49,7 @@ def delete_doc(userid, posts):
         logger.error(e)
 
 # find a document based on criteria
-def find_doc(userid, posts):
+def find_doc(userid):
     try:
         get_post = posts.find_one({'userid': '12345'})
         return get_post
@@ -63,7 +68,7 @@ def drop_bulk_db(pattern2drop):
         logger.error(e)
 
 
-def add_doc(post_one, posts):
+def add_doc(post_one):
     # add a document
     try:
         result = posts.insert_one(post_one)
@@ -80,6 +85,7 @@ post_one ={
     'threshold': '10k',
     'region' :'California',
     'active' : True,
+    'initdate': dt.datetime.now()
 }
 
 def construct_post(userid, username, threshold, time_interval, region):
@@ -90,17 +96,12 @@ def construct_post(userid, username, threshold, time_interval, region):
     'threshold': threshold,
     'region' : region,
     'active' : True,
+    'initdate': dt.datetime.now()
     }
-
     return post
 
 
-# name of db is pymongo_test
-db = client.pymongo_test
-# get all posts
-posts = db.posts
-
-result = add_doc(post_one, posts)
+result = add_doc(post_one)
 print(result)
 
 # find posts sort by ID
@@ -114,7 +115,7 @@ for i in update:
     print(i)
 
 # get count of posts
-num = get_count('joetest', posts)
+num = get_count('joetest')
 print(num)
 
 
