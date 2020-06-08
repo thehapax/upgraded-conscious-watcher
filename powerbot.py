@@ -90,7 +90,7 @@ async def callback(event):
 async def new_handler(event):
     msg = 'Original Data is from poweroutage.us.'
     msg = msg + 'Telegram bot development is independent, has no affliation to above site. \n\n'
-    msg = msg + 'Questions, bug reports? Contact us via @powerfeedback_bot\n'
+    msg = msg + 'Questions, bug reports? Contact @octomatic\n'
     await client.send_message(event.sender_id, msg)
     
 
@@ -144,8 +144,8 @@ def parse_alert(inputstr, userid, username):
         add_post ={
             'userid':  userid,
             'username': username,
-            'time_interval': iarr[1],
-            'threshold': iarr[2],
+            'threshold': iarr[1],
+            'time_interval': iarr[2],
             'region' : iarr[3],
             'active' : True,
             'initdate': dt.datetime.now()
@@ -171,8 +171,26 @@ async def alert_handler(event):
                 msg = 'Ok, settng alert for: ' + inputstr
                 await client.send_message(event.sender_id, msg)
             elif result is False:
-                msg = 'Error setting alert, bad parameters'
+                msg = 'Error setting alert, bad parameters, please check validity'
                 await client.send_message(event.sender_id, msg)
+        elif 'Show Alerts' in inputstr:
+            print(f'sender id: {event.sender_id} ')
+            sender_posts = find_doc(event.sender_id)
+            msg = 'Active alerts: '
+            if sender_posts is not None:
+                msg = msg + sender_posts
+                await client.send_message(event.sender_id, msg)
+        elif 'Stop Notifications' in inputstr:
+            result = delete_doc(event.sender_id)
+            if result:
+                count = result.deleted_count
+                msg = "Stopping all notifications\n"
+                msg = msg + "Total deleted: " + str(count)
+                await client.send_message(event.sender_id, msg)
+            else:
+                msg = "Error stopping notifications"
+                await client.send_message(event.sender_id, msg)
+            
     except Exception as e:
             logger.info(e)
             await client.send_message(event.sender_id, 'Invalid Alert parameters.')
@@ -192,14 +210,14 @@ async def alerthandler(event):
              Button.text('/start', resize=True, single_use=True)]])
     elif 'Set Alert' in event.raw_text:
         # set up alert
-        msg = "example: /setalert 10k 24 California"
-        await client.send_message(event.sender_id, msg)
-    elif 'Stop Notifications' in event.raw_text:
-        msg = "Stopping all notifications"
-        await client.send_message(event.sender_id, msg)        
-    elif 'Show Alerts' in event.raw_text:
-        # get alert information from mongodb
-        msg = "Here are the currently active alerts:" 
+        msg = "/setalert <b>[threshold] [interval] [region]</b>\n\n"
+        msg = msg + "<b>Example:</b> /setalert 10k 24 California\n\n"
+        msg = msg + "Above example would check every 24 hours if "
+        msg = msg + "more than 10k outages in the state of California\n\n"
+        msg = msg + "<b>Threshold options:</b> 10k, 50k, 100k\n"
+        msg = msg + "<b>Interval options (in hours): </b> 6, 12 or 24\n"
+        msg = msg + "<b>Region:</b> any us state, e.g. Oregon\n\n"
+        
         await client.send_message(event.sender_id, msg)
 
 

@@ -13,7 +13,7 @@ logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # region example : state or county, e.g. California
-threshold = ['10k', '>50k','>100k'] # threshold for alert
+threshold = ['10k', '50k','100k'] # threshold for alert
 time_interval = ['24', '12', '6'] # check very 6,12, or 24 hrs
 username = 'testuser'
 user_id = '1234234324'
@@ -43,16 +43,26 @@ def get_count(userid):
 # delete a document
 def delete_doc(userid):
     try:
-        result = posts.delete_one({'userid': userid})
+#        result = posts.delete_one({'userid': userid})
+        result = posts.delete_many({'userid': userid})
         return result
     except Exception as e:
         logger.error(e)
 
 # find a document based on criteria
 def find_doc(userid):
+    fmt = '%Y-%m-%d ' # %H:%M' #:%S %Z%z'
     try:
-        get_post = posts.find_one({'userid': '12345'})
-        return get_post
+        post_string = "" # readily formatted for output to viewer
+#        get_post = posts.find_one({'userid': userid})
+        get_posts = posts.find({'userid': userid})
+        for each_post in get_posts:
+            postdate = each_post['initdate'].strftime(fmt)
+            post_string = post_string +  "\n- " + each_post['region'] + ", "
+            post_string = post_string + " Threshold: " + each_post['threshold'] + " every " + each_post['time_interval'] + "hrs"
+            post_string = post_string + " StartDate: "  + postdate
+        print(post_string)
+        return post_string
     except Exception as e:
         logger.error(e)
 
