@@ -65,6 +65,24 @@ def get_region_data():
 
     return all_region
 
+# get outage number
+def get_state_outage(state):
+    state_url = state_base + state
+    html_content = requests.get(state_url).text
+    soup = BeautifulSoup(html_content, "lxml")
+    state_link = "<a href=\"" +  state_url + "\">" + soup.title.text + "</a>\n"
+    state_data = soup.find("div", attrs={"class" : "row col-md-12"})
+    rows = state_data.find_all("div", attrs={"class": "row"})
+    for i in rows:
+        si = str(i)
+        if "Outages" in si:
+            cleanrow = cleanhtml(si).split()
+            for j in cleanrow:
+                count = j.replace(",", "")
+                if count.isdigit():
+                    return count
+            
+            
 
 def get_state_data(state):
     state_url = state_base + state

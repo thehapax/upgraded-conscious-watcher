@@ -5,6 +5,9 @@ from us_states import regions, south, pacific, get_state_buttons, get_buttons, s
 from us_states import all_regions
 import yaml
 import logging
+import aiocron
+import asyncio
+
 from logging import handlers
 from timezone_list import get_zones, get_zone_buttons
 from timezone_list import get_common_buttons, get_commontz, get_localized_time
@@ -139,6 +142,17 @@ def parse_alert(inputstr, userid, username):
     if iarr[3] not in all_regions:
         logger.info("invalid location: "+ iarr[3])
         oktogo = False
+
+    status = ""
+    if iarr[3] in regions:
+        status = get_region_state_data(iarr[3])
+    if iarr[3] in state_list:
+        status = get_state_data(reformat_2W_states(iarr[3]))
+        
+    print(status)
+    if status is None:
+        oktogo = False
+
     if oktogo:
         # add to mongodb
         add_post ={
@@ -155,7 +169,7 @@ def parse_alert(inputstr, userid, username):
         result = add_doc(add_post)
         print(result)
 
-    return oktogo
+    return oktogo, status
         
 
 @client.on(events.NewMessage(incoming=True, outgoing=False))
@@ -166,10 +180,11 @@ async def alert_handler(event):
             uname = await event.get_sender()
             print("username " + str(uname.username))
             print("sender id " + str(event.sender_id))
-            result = parse_alert(inputstr, event.sender_id, uname.username)
+            result, status = parse_alert(inputstr, event.sender_id, uname.username)
             if result is True:
                 msg = 'Ok, settng alert for: ' + inputstr
                 await client.send_message(event.sender_id, msg)
+                await client.send_message(event.sender_id, status)
             elif result is False:
                 msg = 'Error setting alert, bad parameters, please check validity'
                 await client.send_message(event.sender_id, msg)
@@ -228,7 +243,6 @@ async def handler(event):
 
     if '/outages' in event.raw_text:
         await client.send_message(event.sender_id, 'Get Updates', buttons=[
-#            [Button.text('/alerts', resize=True, single_use=True), # show alerts, # stop alerts
 #             Button.text('Set Time Zone', resize=True, single_use=True),],
             [Button.text('Top 5 Outages', resize=True, single_use=True),
             Button.text('Regional Outages', resize=True, single_use=True),], 
@@ -265,7 +279,32 @@ async def handler(event):
             
         except Exception as e:
             logger.info(e)
-            
+
+# check every 6 hours, 
+# if 24, only at midnight
+# if 12, at midnight and noon
+# if 6, every time.
+
+# “At minute 0 past every 6th hour.”
+# @aiocron.crontab('0 */6 * * *')
+
+# “At minute 0 past every 12th hour.”
+# @aiocron.crontab('0 */12 * * *')
+
+# “At minute 0 past every 24 hour.”
+# @aiocron.crontab('0 * * * *')
+
+
+@aiocron.crontab('* * * * *')
+async def attime():
+    now =  dt.datetime.now()
+    print(' every 6 hours: ' + str(now))
+    
+    # check database
+    # pull data from powerwatch.us
+    # if criteria match, send to each user
+    
+
 client.start(bot_token=TOKEN)
 
 with client:

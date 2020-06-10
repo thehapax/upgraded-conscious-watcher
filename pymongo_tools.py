@@ -4,6 +4,7 @@ import logging
 from logging import handlers
 from us_states import regions, state_list
 import datetime as dt
+from power_data import get_state_outage
 
 # https://github.com/mongodb/homebrew-brew
 # $ brew services start mongodb-community
@@ -87,6 +88,11 @@ def add_doc(post_one):
     except Exception as e:
         logger.error(e)
 
+# find posts by time interval
+def find_by_interval(slot):
+    update = posts.find({'time_interval': slot})
+    return update
+
 
 post_one ={
     'userid': '12345',
@@ -110,24 +116,41 @@ def construct_post(userid, username, threshold, time_interval, region):
     }
     return post
 
-
+"""
+print("adding one test post")
 result = add_doc(post_one)
 print(result)
+"""
 
+"""
 # find posts sort by ID
+print("find and sort posts by id")
 posts_by_id = posts.find().sort("_id", DESCENDING)
 print(posts_by_id)
+"""
 
-# find posts by time interval
-update = posts.find({'time_interval':'6'})
-print(update)
-for i in update:
-    print(i)
+"""
+print("find posts by time interval")
+entries = find_by_interval("6")
+for i in entries:
+    userid = i['userid']
+    region = i['region']
+    thres = i['threshold']
+    print(f'userid: {userid}, region: {region}, thres: {thres}')
 
+"""
+
+for state in state_list:
+    count = get_state_outage(state)
+    print(f'State: {state} Outage: {count}')
+
+
+"""
 # get count of posts
+print("get count of posts by user 'joetest'")
 num = get_count('joetest')
 print(num)
-
+"""
 
 
 
