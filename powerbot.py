@@ -309,6 +309,7 @@ async def getalerts(interval, alertdate):
         msg = f"<b>{interval}H ALERT:</b> {region} sees <b>{count}</b> Power Outages,\nAs of:  "
         msg = msg + alertdate + "\n"
         msg = msg + "Get details @ /outages "
+        logger.info(msg)
         if count is not None:
             await client.send_message(userid, msg)
 
@@ -334,13 +335,14 @@ async def attime24():
 #    print(ctime)    
 #    if ctime in test:
 #        await getalerts(interval, alertdate)
+    logger.info(f"Running Cron at {now}")
     if ctime in six:
         interval = "6"
         await getalerts(interval, alertdate)
-    elif ctime in twelve:
+    if ctime in twelve:
         interval = "12"
         await getalerts(interval, alertdate)
-    elif ctime in twentyfour:
+    if ctime in twentyfour:
         interval = "24"
         await getalerts(interval, alertdate)
 
