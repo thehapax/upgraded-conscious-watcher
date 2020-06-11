@@ -132,7 +132,7 @@ time_intervals = ['6', '12', '24']
 
 def parse_alert(inputstr, userid, username): 
     iarr  = inputstr.split(' ')
-    print(iarr)
+#    print(iarr)
     oktogo = True
     # validate inputs
     if iarr[1] not in thresholds:
@@ -165,7 +165,7 @@ def parse_alert(inputstr, userid, username):
     if fullname is not None:
         status = get_state_data(reformat_2W_states(fullname))
         
-    print(status)
+#    print(status)
     if status is None:
         oktogo = False
 
@@ -180,10 +180,10 @@ def parse_alert(inputstr, userid, username):
             'active' : True,
             'initdate': dt.datetime.now()
         }
-        print(add_post)
+#        print(add_post)
         
         result = add_doc(add_post)
-        print(result)
+#        print(result)
 
     return oktogo, status
         
@@ -232,7 +232,7 @@ async def alerthandler(event):
     input = str(event.raw_text)
 #    print("outages handler: {input}")
     if '/alerts' in event.raw_text:
-        print(input)
+#        print(input)
         msg = 'Fetching.... ' + input
         await client.send_message(event.sender_id, msg, buttons=[
             [Button.text('Set Alert', resize=True, single_use=True),

@@ -105,7 +105,7 @@ def get_state_data(state):
 def get_county_data(county):
     try:
         county_url = county_base + county
-        print(county_url + "\n")
+#        print(county_url + "\n")
         html_content = requests.get(county_url).text
         soup = BeautifulSoup(html_content, "lxml")
         county_link = "<a href=\"" +  county_url + "\">" + soup.title.text + "</a>\n"
