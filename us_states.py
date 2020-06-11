@@ -10,7 +10,7 @@ state_list = {
          'New Hampshire','New Jersey','New Mexico','New York',
          'North Carolina','North Dakota','Northern Mariana Islands', 'Ohio',    
          'Oklahoma','Oregon','Pennsylvania', 'Puerto Rico', 'Rhode Island',
-         'South  Carolina','South Dakota','Tennessee','Texas','Utah',
+         'South Carolina','South Dakota','Tennessee','Texas','Utah',
          'Vermont','Virginia','Washington','West Virginia',
          'Wisconsin','Wyoming', 'Virgin Islands'
     }
@@ -187,3 +187,9 @@ if __name__ == "__main__":
     test = 'Tennessee'
     if test in state_list:
         print("Tennessee is in the state_list")
+        
+    state_value = 'wa'
+    fullname = two_letter_statecode(state_value)
+    print(f'short : {state_value}, full: {fullname}')
+    
+    

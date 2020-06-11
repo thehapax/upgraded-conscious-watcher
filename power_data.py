@@ -2,12 +2,12 @@ from bs4 import BeautifulSoup
 import requests
 import lxml
 import pandas as pd
-from us_states import states, reformat_2W_states, state_list
+from us_states import states, reformat_2W_states, state_list, two_letter_statecode
 import re
 
 main_url = "https://poweroutage.us/"
 state_base = main_url + "area/state/"
-regions_url = main_url +  "area/regions"
+regions_url = main_url + "area/regions"
 county_base = main_url + "area/county/"
 region_state = main_url + "area/region/"
 #print(soup.prettify()) # print the parsed data of html
@@ -65,14 +65,23 @@ def get_region_data():
 
     return all_region
 
-# get outage number
-def get_state_outage(state):
+# get raw data from website, and link
+def raw_statedata(state):
     state_url = state_base + state
     html_content = requests.get(state_url).text
     soup = BeautifulSoup(html_content, "lxml")
     state_link = "<a href=\"" +  state_url + "\">" + soup.title.text + "</a>\n"
     state_data = soup.find("div", attrs={"class" : "row col-md-12"})
     rows = state_data.find_all("div", attrs={"class": "row"})
+    return rows, state_link
+
+# get outage number for a state
+def get_state_outage(state):
+    if len(state) == 2:
+        state_name = two_letter_statecode(input)
+    else: 
+        state_name = state
+    rows, state_link = raw_statedata(state_name)
     for i in rows:
         si = str(i)
         if "Outages" in si:
@@ -81,18 +90,10 @@ def get_state_outage(state):
                 count = j.replace(",", "")
                 if count.isdigit():
                     return count
-            
-            
-
+                        
+# get state display data
 def get_state_data(state):
-    state_url = state_base + state
-    #print(state_url)
-    html_content = requests.get(state_url).text
-    soup = BeautifulSoup(html_content, "lxml")
-    state_link = "<a href=\"" +  state_url + "\">" + soup.title.text + "</a>\n"
-    
-    state_data = soup.find("div", attrs={"class" : "row col-md-12"})
-    rows = state_data.find_all("div", attrs={"class": "row"})
+    rows, state_link = raw_statedata(state)
     clean_rows = ""
     data = ""
     for i in rows:
@@ -146,3 +147,7 @@ if __name__ == "__main__":
     print(f"Testing area: {area}\n\n")
     state_regions = get_region_state_data(area)
     print(state_regions)
+    
+    state = "California"
+    count = get_state_outage(state)
+    print(f'State Ourages for: {state}, Outages: {count}')

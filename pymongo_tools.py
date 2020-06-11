@@ -55,14 +55,13 @@ def find_doc(userid):
     fmt = '%Y-%m-%d ' # %H:%M' #:%S %Z%z'
     try:
         post_string = "" # readily formatted for output to viewer
-#        get_post = posts.find_one({'userid': userid})
         get_posts = posts.find({'userid': userid})
         for each_post in get_posts:
             postdate = each_post['initdate'].strftime(fmt)
             post_string = post_string +  "\n- " + each_post['region'] + ", "
             post_string = post_string + " Threshold: " + each_post['threshold'] + " every " + each_post['time_interval'] + "hrs"
             post_string = post_string + " StartDate: "  + postdate
-        print(post_string)
+        #print(post_string)
         return post_string
     except Exception as e:
         logger.error(e)
@@ -94,18 +93,22 @@ def find_by_interval(slot):
     return update
 
 
-post_one ={
-    'userid': '12345',
-    'username': 'joetest',
-    'time_interval': '6',
-    'threshold': '10k',
-    'region' :'California',
-    'active' : True,
-    'initdate': dt.datetime.now()
-}
+def check_threshold(count, thres):
+    if thres == '10k':
+        if count > 10000:
+            return count
+    if thres == '50k':
+        if count > 50000:
+            return count
+    if thres == '100k':
+        if count > 100000:
+            return count
+    else: 
+        return None
+
 
 def construct_post(userid, username, threshold, time_interval, region):
-    post ={
+    post = {
     'userid': userid,
     'username': username,
     'time_interval': time_interval,
@@ -116,41 +119,63 @@ def construct_post(userid, username, threshold, time_interval, region):
     }
     return post
 
-"""
-print("adding one test post")
-result = add_doc(post_one)
-print(result)
-"""
 
-"""
-# find posts sort by ID
-print("find and sort posts by id")
-posts_by_id = posts.find().sort("_id", DESCENDING)
-print(posts_by_id)
-"""
+if __name__ == "__main__":
 
-"""
-print("find posts by time interval")
-entries = find_by_interval("6")
-for i in entries:
-    userid = i['userid']
-    region = i['region']
-    thres = i['threshold']
-    print(f'userid: {userid}, region: {region}, thres: {thres}')
+    # example post
+    post_one = {
+        'userid': '12345',
+        'username': 'joetest',
+        'time_interval': '6',
+        'threshold': '10k',
+        'region' :'California',
+        'active' : True,
+        'initdate': dt.datetime.now()
+    }
 
-"""
+    """
+    print("adding one test post")
+    result = add_doc(post_one)
+    print(result)
+    """
 
-for state in state_list:
-    count = get_state_outage(state)
-    print(f'State: {state} Outage: {count}')
+    """
+    # find posts sort by ID
+    print("find and sort posts by id")
+    posts_by_id = posts.find().sort("_id", DESCENDING)
+    print(posts_by_id)
+    """
+
+    print("find posts by time interval")
+    interval = "24"
+
+    entries = find_by_interval(interval)
+    for i in entries:
+        userid = i['userid']
+        region = i['region']
+        thres = i['threshold']
+    #   print(str(i))
+        out = get_state_outage(region)
+    #   print(out)
+        count = check_threshold(int(out), thres)
+        print(f'userid: {userid}, region: {region}, thres: {thres}, outages: {count} ')
 
 
-"""
-# get count of posts
-print("get count of posts by user 'joetest'")
-num = get_count('joetest')
-print(num)
-"""
+
+    """
+    # list all state outages 
+    for state in state_list:
+        count = get_state_outage(state)
+        print(f'State: {state} Outage: {count}')
+    """
+
+
+    """
+    # get count of posts
+    print("get count of posts by user 'joetest'")
+    num = get_count('joetest')
+    print(num)
+    """
 
 
 

@@ -1,5 +1,6 @@
 from telethon import TelegramClient, events, Button
 from power_data import get_state_data, get_top5data, get_region_data, get_region_state_data, get_county_data
+from power_data import get_state_outage
 from us_states import is_state_value, two_letter_statecode, reformat_2W_states, states, state_list
 from us_states import regions, south, pacific, get_state_buttons, get_buttons, split
 from us_states import all_regions
@@ -14,6 +15,7 @@ from timezone_list import get_common_buttons, get_commontz, get_localized_time
 
 import datetime as dt 
 from pymongo_tools import get_count, delete_doc, find_doc, add_doc, drop_bulk_db
+from pymongo_tools import find_by_interval, check_threshold
 
 log_path = '/Users/octo/url-watcher-bot/logs/logfile'
 
@@ -93,7 +95,7 @@ async def callback(event):
 async def new_handler(event):
     msg = 'Original Data is from poweroutage.us.'
     msg = msg + 'Telegram bot development is independent, has no affliation to above site. \n\n'
-    msg = msg + 'Questions, bug reports? Contact @octomatic\n'
+    msg = msg + 'Questions, bug reports? Contact @octocubic\n'
     await client.send_message(event.sender_id, msg)
     
 
@@ -110,7 +112,7 @@ async def new_handler(event):
 async def state_handler(event):
     try:
         input = str(event.raw_text)
-#       print(f'state/county handler: {input}')
+        print(f'state/county handler: {input}')
         if len(input) == 4:
             msg = get_county_data(input)
             await client.send_message(event.sender_id, msg)            
@@ -118,7 +120,7 @@ async def state_handler(event):
             state_name = two_letter_statecode(input)
             msg = get_state_data(state_name)
             await client.send_message(event.sender_id, msg)
-        elif len(input) > 0 and is_state_value(input):
+        elif input in state_list:
             msg = get_state_data(reformat_2W_states(input))
             await client.send_message(event.sender_id, msg)
     except Exception as e:
@@ -139,15 +141,29 @@ def parse_alert(inputstr, userid, username):
     if iarr[2] not in time_intervals:
         logger.info("invalid time interval: "+ iarr[2])
         oktogo = False
-    if iarr[3] not in all_regions:
-        logger.info("invalid location: "+ iarr[3])
+    if iarr[3] not in state_list:
+        logger.info("invalid State, please check and try again:  "+ iarr[3])
         oktogo = False
+
+    fullname = ""
+    if iarr[3] in state_list:
+        fullname = iarr[3] 
+        
+    if len(str(iarr[3])) == 2: # if 2 letter state code
+        fullname = two_letter_statecode(iarr[3])
+        if fullname is None:
+            logger.info("invalid 2 Letter State, please check and try again:  "+ iarr[3])
+            oktogo = False
+        elif fullname is not None: 
+            oktogo = True
 
     status = ""
     if iarr[3] in regions:
         status = get_region_state_data(iarr[3])
     if iarr[3] in state_list:
         status = get_state_data(reformat_2W_states(iarr[3]))
+    if fullname is not None:
+        status = get_state_data(reformat_2W_states(fullname))
         
     print(status)
     if status is None:
@@ -160,7 +176,7 @@ def parse_alert(inputstr, userid, username):
             'username': username,
             'threshold': iarr[1],
             'time_interval': iarr[2],
-            'region' : iarr[3],
+            'region' : fullname,
             'active' : True,
             'initdate': dt.datetime.now()
         }
@@ -178,8 +194,8 @@ async def alert_handler(event):
         inputstr = event.raw_text
         if '/setalert' in inputstr:
             uname = await event.get_sender()
-            print("username " + str(uname.username))
-            print("sender id " + str(event.sender_id))
+#            print("username " + str(uname.username))
+#            print("sender id " + str(event.sender_id))
             result, status = parse_alert(inputstr, event.sender_id, uname.username)
             if result is True:
                 msg = 'Ok, settng alert for: ' + inputstr
@@ -189,7 +205,7 @@ async def alert_handler(event):
                 msg = 'Error setting alert, bad parameters, please check validity'
                 await client.send_message(event.sender_id, msg)
         elif 'Show Alerts' in inputstr:
-            print(f'sender id: {event.sender_id} ')
+#            print(f'sender id: {event.sender_id} ')
             sender_posts = find_doc(event.sender_id)
             msg = 'Active alerts: '
             if sender_posts is not None:
@@ -226,12 +242,13 @@ async def alerthandler(event):
     elif 'Set Alert' in event.raw_text:
         # set up alert
         msg = "/setalert <b>[threshold] [interval] [region]</b>\n\n"
-        msg = msg + "<b>Example:</b> /setalert 10k 24 California\n\n"
-        msg = msg + "Above example would check every 24 hours if "
+        msg = msg + "<b>Example:</b> /setalert 10k 24 CA \n\n"
+        msg = msg + "Above example would check every 24 hours in UTC time if "
         msg = msg + "more than 10k outages in the state of California\n\n"
+        msg = msg + "<u>IMPORTANT</u>: Only the 3 options below available:\n\n"
         msg = msg + "<b>Threshold options:</b> 10k, 50k, 100k\n"
         msg = msg + "<b>Interval options (in hours): </b> 6, 12 or 24\n"
-        msg = msg + "<b>Region:</b> any us state, e.g. Oregon\n\n"
+        msg = msg + "<b>Region:</b> Must be a us state, e.g. Oregon\n\n"
         
         await client.send_message(event.sender_id, msg)
 
@@ -247,8 +264,8 @@ async def handler(event):
             [Button.text('Top 5 Outages', resize=True, single_use=True),
             Button.text('Regional Outages', resize=True, single_use=True),], 
             [Button.text('State', resize=True, single_use=True),
-            Button.text('County', resize=True, single_use=True)]
-        ])
+            Button.text('County', resize=True, single_use=True)],
+            [Button.text('/start', resize=True, single_use=True)]        ])
     elif 'Top 5 Outages' in event.raw_text:
         msg, top5states = get_top5data()
         top5_buttons = get_buttons(top5states)
@@ -262,7 +279,7 @@ async def handler(event):
         rbuttons = split(region_buttons, 2)
         await client.send_message(event.sender_id, msg, buttons=rbuttons)
     elif 'State' in event.raw_text:
-        msg = "Enter State Name or 2 letter code: (E.g. California or CA)"
+        msg = "Enter State name or 2 letter code: (E.g. CA or California)"
         await client.send_message(event.sender_id, msg)
     elif 'County' in event.raw_text:
         msg = "Enter 4 letter county code. You can find code in the link on PowerOutage.US\n"
@@ -280,30 +297,53 @@ async def handler(event):
         except Exception as e:
             logger.info(e)
 
-# check every 6 hours, 
-# if 24, only at midnight
-# if 12, at midnight and noon
-# if 6, every time.
 
-# “At minute 0 past every 6th hour.”
-# @aiocron.crontab('0 */6 * * *')
+async def getalerts(interval, alertdate):
+    entries = find_by_interval(interval)
+    for i in entries:
+        userid = i['userid']
+        region = i['region']
+        thres = i['threshold']
+        out = get_state_outage(region)
+        count = check_threshold(int(out), thres)
+        msg = f"<b>{interval}H ALERT:</b> {region} sees <b>{count}</b> Power Outages,\nAs of:  "
+        msg = msg + alertdate + "\n"
+        msg = msg + "Get details @ /outages "
+        if count is not None:
+            await client.send_message(userid, msg)
 
-# “At minute 0 past every 12th hour.”
-# @aiocron.crontab('0 */12 * * *')
 
-# “At minute 0 past every 24 hour.”
-# @aiocron.crontab('0 * * * *')
+six = ['0:00', '06:00', '12:00', '18:00']
+twelve = ['0:00', '12:00']
+twentyfour = ['0:00']
 
+test = ['22:30', '22:35']
 
-@aiocron.crontab('* * * * *')
-async def attime():
+# @aiocron.crontab('0 */6 * * *') 
+# “At minute 0 past every 6/12/24 hour.”
+
+@aiocron.crontab('* */6 * * *')
+async def attime24():
+    interval = "24"
     now =  dt.datetime.now()
-    print(' every 6 hours: ' + str(now))
-    
-    # check database
-    # pull data from powerwatch.us
-    # if criteria match, send to each user
-    
+    fmt = '%Y-%m-%d %H:%M' #:%S %Z%z'
+    alertdate = now.strftime(fmt)
+    darr = alertdate.split(" ")
+    currtime = darr[1]
+    ctime = str(currtime)
+#    print(ctime)    
+#    if ctime in test:
+#        await getalerts(interval, alertdate)
+    if ctime in six:
+        interval = "6"
+        await getalerts(interval, alertdate)
+    elif ctime in twelve:
+        interval = "12"
+        await getalerts(interval, alertdate)
+    elif ctime in twentyfour:
+        interval = "24"
+        await getalerts(interval, alertdate)
+
 
 client.start(bot_token=TOKEN)
 
