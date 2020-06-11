@@ -112,7 +112,7 @@ async def new_handler(event):
 async def state_handler(event):
     try:
         input = str(event.raw_text)
-        print(f'state/county handler: {input}')
+#        print(f'state/county handler: {input}')
         if len(input) == 4:
             msg = get_county_data(input)
             await client.send_message(event.sender_id, msg)            
