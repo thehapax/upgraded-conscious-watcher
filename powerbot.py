@@ -323,7 +323,7 @@ test = ['22:30', '22:35']
 # @aiocron.crontab('0 */6 * * *') 
 # “At minute 0 past every 6/12/24 hour.”
 
-@aiocron.crontab('* */6 * * *')
+@aiocron.crontab('0 0,6,12,18 * * *')
 async def attime24():
     interval = "24"
     now =  dt.datetime.now()
